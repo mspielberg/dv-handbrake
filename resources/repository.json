@@ -1,0 +1,6 @@
+{
+  "Releases":
+  [
+      {"Id": "HandBrake", "Version": "0.1.0", "DownloadUrl": "https://github.com/mspielberg/dv-handbrake/releases/download/v0.1.0/HandBrake_0.1.0.zip"}
+  ]
+}
