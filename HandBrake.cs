@@ -8,7 +8,7 @@ namespace DvMod.HandBrake
     [EnableReloading]
     public static class Main
     {
-        public static UnityModManager.ModEntry mod;
+        public static UnityModManager.ModEntry? mod;
         public static bool enabled;
 
         static bool Load(UnityModManager.ModEntry modEntry)
