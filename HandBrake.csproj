@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>DvMod.HandBrake</RootNamespace>
+    <InformationalVersion>0.1.0</InformationalVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="0Harmony"/>
+    <Reference Include="Assembly-CSharp"/>
+    <Reference Include="DV.BrakeSystem"/>
+    <Reference Include="DV.Interaction"/>
+    <Reference Include="UnityEngine.CoreModule"/>
+    <Reference Include="UnityModManager"/>
+  </ItemGroup>
+</Project>
