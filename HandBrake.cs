@@ -40,28 +40,25 @@ namespace DvMod.HandBrake
         }
     }
 
-    [HarmonyPatch(typeof(Brakeset), nameof(Brakeset.Update))]
-    [HarmonyAfter(new string[] { "AirBrake" })]
-    static public class HandBrake
+    [HarmonyPatch(typeof(TrainCar), nameof(TrainCar.OnEnable))]
+    static class HandBrake
     {
-        const float Increment = 0.05f;
-
-        static void Postfix()
+        static void Postfix(TrainCar __instance)
         {
-            if (!Main.enabled)
+            if (__instance.brakeSystem.hasIndependentBrake)
                 return;
+            var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
+            cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
+        }
+    }
 
-            var car = PlayerManager.Car;
-            if (car == null || car.brakeSystem.hasIndependentBrake)
-                return;
-
-            var adjust =
-                KeyBindings.increaseIndependentBrakeKeys.IsPressed() ? Increment
-                : KeyBindings.decreaseIndependentBrakeKeys.IsPressed() ? -Increment
-                : 0f;
-
-            car.brakeSystem.independentBrakePosition = Mathf.Clamp01(car.brakeSystem.independentBrakePosition + adjust);
-            car.brakeSystem.brakingFactor = Mathf.Max(car.brakeSystem.brakingFactor, car.brakeSystem.independentBrakePosition);
+    [HarmonyPatch(typeof(CabooseController), nameof(CabooseController.Start))]
+    static class CabooseControllerStartPatch
+    {
+        static void Postfix(CabooseController __instance)
+        {
+            if (__instance.GetComponent<TrainCar>().carType != TrainCarType.CabooseRed)
+                __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
         }
     }
 }
