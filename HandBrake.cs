@@ -1,4 +1,3 @@
-using DV.Simulation.Brake;
 using HarmonyLib;
 using UnityEngine;
 using UnityModManagerNet;
@@ -40,22 +39,24 @@ namespace DvMod.HandBrake
         }
     }
 
-    [HarmonyPatch(typeof(TrainCar), nameof(TrainCar.OnEnable))]
-    static class HandBrake
+    [HarmonyPatch(typeof(TrainCar), "OnEnable")]
+    public static class HandBrake
     {
-        static void Postfix(TrainCar __instance)
+        public static void Postfix(TrainCar __instance)
         {
             if (__instance.brakeSystem.hasIndependentBrake)
                 return;
             var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
             cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
+            if (UnityModManager.FindMod("AirBrake") != null)
+                __instance.brakeSystem.independentBrakePosition = 1f;
         }
     }
 
-    [HarmonyPatch(typeof(CabooseController), nameof(CabooseController.Start))]
-    static class CabooseControllerStartPatch
+    [HarmonyPatch(typeof(CabooseController), "Start")]
+    public static class CabooseControllerStartPatch
     {
-        static void Postfix(CabooseController __instance)
+        public static void Postfix(CabooseController __instance)
         {
             if (__instance.GetComponent<TrainCar>().carType != TrainCarType.CabooseRed)
                 __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
