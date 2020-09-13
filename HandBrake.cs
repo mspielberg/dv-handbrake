@@ -42,24 +42,27 @@ namespace DvMod.HandBrake
     [HarmonyPatch(typeof(TrainCar), "OnEnable")]
     public static class HandBrake
     {
-        public static void Postfix(TrainCar __instance)
+        public static class TrainCarOnEnablePatch
         {
-            if (__instance.brakeSystem.hasIndependentBrake)
-                return;
-            var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
-            cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
-            if (UnityModManager.FindMod("AirBrake") != null)
-                __instance.brakeSystem.independentBrakePosition = 1f;
+            public static void Postfix(TrainCar __instance)
+            {
+                if (__instance.brakeSystem.hasIndependentBrake)
+                    return;
+                var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
+                cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
+            }
         }
-    }
 
-    [HarmonyPatch(typeof(CabooseController), "Start")]
-    public static class CabooseControllerStartPatch
-    {
-        public static void Postfix(CabooseController __instance)
+        [HarmonyPatch(typeof(CabooseController), "Start")]
+        public static class CabooseControllerStartPatch
         {
-            if (__instance.GetComponent<TrainCar>().carType != TrainCarType.CabooseRed)
-                __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
+            public static void Postfix(CabooseController __instance)
+            {
+                if (__instance.GetComponent<TrainCar>().carType != TrainCarType.CabooseRed)
+                    __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
+                if (UnityModManager.FindMod("AirBrake") != null)
+                    __instance.targetIndependentBrake = 1f;
+            }
         }
     }
 }
