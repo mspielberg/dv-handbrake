@@ -39,9 +39,9 @@ namespace DvMod.HandBrake
         }
     }
 
-    [HarmonyPatch(typeof(TrainCar), "OnEnable")]
     public static class HandBrake
     {
+        [HarmonyPatch(typeof(TrainCar), "OnEnable")]
         public static class TrainCarOnEnablePatch
         {
             public static void Postfix(TrainCar __instance)
@@ -61,7 +61,7 @@ namespace DvMod.HandBrake
                 if (__instance.GetComponent<TrainCar>().carType != TrainCarType.CabooseRed)
                     __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
                 if (UnityModManager.FindMod("AirBrake") != null)
-                    __instance.targetIndependentBrake = 1f;
+                    __instance.car.brakeSystem.independentBrakePosition = __instance.targetIndependentBrake = 1f;
             }
         }
     }
