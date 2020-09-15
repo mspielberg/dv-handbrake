@@ -1,4 +1,5 @@
 using HarmonyLib;
+using System.Collections;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -10,31 +11,20 @@ namespace DvMod.HandBrake
         public static UnityModManager.ModEntry? mod;
         public static bool enabled;
 
-        static bool Load(UnityModManager.ModEntry modEntry)
+        public static bool Load(UnityModManager.ModEntry modEntry)
         {
             mod = modEntry;
-            var harmony = new Harmony(modEntry.Info.Id);
-            harmony.PatchAll();
-
             modEntry.OnToggle = OnToggle;
-            modEntry.OnUnload = OnUnload;
-
             return true;
         }
 
-        static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
-        {
-            if (value != enabled)
-            {
-                enabled = value;
-            }
-            return true;
-        }
-
-        static bool OnUnload(UnityModManager.ModEntry modEntry)
+        private static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             var harmony = new Harmony(modEntry.Info.Id);
-            harmony.UnpatchAll(modEntry.Info.Id);
+            if (value)
+                harmony.PatchAll();
+            else
+                harmony.UnpatchAll(modEntry.Info.Id);
             return true;
         }
     }
@@ -56,12 +46,20 @@ namespace DvMod.HandBrake
         [HarmonyPatch(typeof(CabooseController), "Start")]
         public static class CabooseControllerStartPatch
         {
+            private static IEnumerator DelayedSetIndependent(CabooseController controller)
+            {
+                // Wait for auto coupling to finish
+                yield return WaitFor.SecondsRealtime(1.0f);
+                if (controller.car.trainset.locoIndices.Count == 0)
+                    controller.car.brakeSystem.independentBrakePosition = controller.targetIndependentBrake = 1f;
+            }
+
             public static void Postfix(CabooseController __instance)
             {
-                if (__instance.GetComponent<TrainCar>().carType != TrainCarType.CabooseRed)
+                if (!CarTypes.IsCaboose(__instance.car.carType))
                     __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
                 if (UnityModManager.FindMod("AirBrake") != null)
-                    __instance.car.brakeSystem.independentBrakePosition = __instance.targetIndependentBrake = 1f;
+                    __instance.StartCoroutine(DelayedSetIndependent(__instance));
             }
         }
     }
