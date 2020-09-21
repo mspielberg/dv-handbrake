@@ -9,7 +9,6 @@ namespace DvMod.HandBrake
     public static class Main
     {
         public static UnityModManager.ModEntry? mod;
-        public static bool enabled;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -60,6 +59,32 @@ namespace DvMod.HandBrake
                     __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
                 if (UnityModManager.FindMod("AirBrake") != null)
                     __instance.StartCoroutine(DelayedSetIndependent(__instance));
+            }
+        }
+
+        [HarmonyPatch(typeof(CarKeyboardInputCaboose), nameof(CarKeyboardInputCaboose.CheckIndependentBreakInput))]
+        public static class CheckIndependentBreakInputPatch
+        {
+            private static void SetAllIndependentBrakes(float value)
+            {
+                foreach (var car in PlayerManager.Car.trainset.cars)
+                {
+                    CabooseController? controller = car.GetComponent<CabooseController>();
+                    controller?.SetIndependentBrake(value);
+                }
+            }
+
+            public static void Postfix()
+            {
+                if (!PlayerManager.Car)
+                    return;
+                if (KeyCode.LeftShift.IsPressed() || KeyCode.RightShift.IsPressed())
+                {
+                    if (KeyBindings.increaseIndependentBrakeKeys.IsPressed())
+                        SetAllIndependentBrakes(1f);
+                    else if (KeyBindings.decreaseIndependentBrakeKeys.IsPressed())
+                        SetAllIndependentBrakes(0f);
+                }
             }
         }
     }
