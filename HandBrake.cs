@@ -47,10 +47,19 @@ namespace DvMod.HandBrake
         {
             private static IEnumerator DelayedSetIndependent(CabooseController controller)
             {
+                TrainCar car = controller.car;
+                int lastTrainsetSize = car.trainset.cars.Count;
                 // Wait for auto coupling to finish
-                yield return WaitFor.SecondsRealtime(1.0f);
-                if (controller.car.trainset.locoIndices.Count == 0)
-                    controller.car.brakeSystem.independentBrakePosition = controller.targetIndependentBrake = 1f;
+                while (true)
+                {
+                    yield return WaitFor.SecondsRealtime(1.0f);
+                    if (car.trainset.cars.Count == lastTrainsetSize)
+                        break;
+                    else
+                        lastTrainsetSize = car.trainset.cars.Count;
+                }
+                if (car.trainset.locoIndices.Count == 0)
+                    car.brakeSystem.independentBrakePosition = controller.targetIndependentBrake = 1f;
             }
 
             public static void Postfix(CabooseController __instance)
