@@ -35,7 +35,7 @@ namespace DvMod.HandBrake
         {
             public static void Postfix(TrainCar __instance)
             {
-                if (__instance.brakeSystem.hasIndependentBrake)
+                if (CarTypes.IsAnyLocomotiveOrTender(__instance.carType))
                     return;
                 var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
                 cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
