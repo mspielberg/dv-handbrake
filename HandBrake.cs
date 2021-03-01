@@ -47,6 +47,7 @@ namespace DvMod.HandBrake
         {
             private static IEnumerator DelayedSetIndependent(CabooseController controller)
             {
+                yield return null;
                 TrainCar car = controller.car;
                 int lastTrainsetSize = car.trainset.cars.Count;
                 // Wait for auto coupling to finish
