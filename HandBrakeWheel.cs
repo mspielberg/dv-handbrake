@@ -74,7 +74,7 @@ namespace DvMod.HandBrake
                 {
                     var caboosePrefab = CarTypes.GetCarPrefab(TrainCarType.CabooseRed);
                     var cabooseInteriorPrefab = caboosePrefab.GetComponent<TrainCar>().interiorPrefab;
-                    _wheelControl = Object.Instantiate(cabooseInteriorPrefab.transform.Find("C BrakeWheel").gameObject);
+                    _wheelControl = cabooseInteriorPrefab.transform.Find("C BrakeWheel").gameObject;
                 }
                 return _wheelControl;
             }
@@ -132,7 +132,10 @@ namespace DvMod.HandBrake
             public static void Prefix(ControlSpec spec)
             {
                 if (spec.name == "C BrakeWheel(Clone)" && spec is Wheel wheel)
+                {
                     wheel.scrollWheelHoverScroll = 1f;
+                    wheel.nonVrStaticInteractionArea = null;
+                }
             }
         }
     }
