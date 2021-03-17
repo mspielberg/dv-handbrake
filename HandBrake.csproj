@@ -21,7 +21,9 @@
     <Reference Include="Assembly-CSharp"/>
     <Reference Include="DV.BrakeSystem"/>
     <Reference Include="DV.Interaction"/>
+    <Reference Include="DV.Utils"/>
     <Reference Include="UnityEngine.CoreModule"/>
+    <Reference Include="UnityEngine.PhysicsModule"/>
     <Reference Include="UnityModManager"/>
   </ItemGroup>
 </Project>
