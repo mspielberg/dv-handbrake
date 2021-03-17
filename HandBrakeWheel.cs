@@ -138,5 +138,15 @@ namespace DvMod.HandBrake
                 }
             }
         }
+
+        [HarmonyPatch(typeof(CabooseController), nameof(CabooseController.SetIndependentBrake))]
+        public static class SetIndependentBrakePatch
+        {
+            public static void Postfix(CabooseController __instance)
+            {
+                __instance.car.brakeSystem.independentBrakePosition =
+                    Mathf.Clamp01(Mathf.InverseLerp(0.5f, 0.95f, __instance.targetIndependentBrake));
+            }
+        }
     }
 }
