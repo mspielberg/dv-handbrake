@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -26,6 +27,11 @@ namespace DvMod.HandBrake
                 harmony.UnpatchAll(modEntry.Info.Id);
             return true;
         }
+
+        public static void DebugLog(string message)
+        {
+            mod?.Logger.Log(message);
+        }
     }
 
     public static class HandBrake
@@ -37,38 +43,45 @@ namespace DvMod.HandBrake
             {
                 if (CarTypes.IsAnyLocomotiveOrTender(__instance.carType))
                     return;
-                var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
-                cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
+                if (__instance.GetComponent<CabooseController>() == null)
+                {
+                    var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
+                    cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
+                }
+                if (UnityModManager.FindMod("AirBrake")?.Enabled ?? false)
+                    __instance.StartCoroutine(DelayedSetIndependent(__instance));
             }
-        }
 
-        [HarmonyPatch(typeof(CabooseController), "Start")]
-        public static class CabooseControllerStartPatch
-        {
-            private static IEnumerator DelayedSetIndependent(CabooseController controller)
+            private static IEnumerator DelayedSetIndependent(TrainCar car)
             {
                 yield return null;
-                TrainCar car = controller.car;
                 int lastTrainsetSize = car.trainset.cars.Count;
                 // Wait for auto coupling to finish
                 while (true)
                 {
                     yield return WaitFor.SecondsRealtime(1.0f);
+                    // Main.DebugLog($"{Time.time} Checking {car.ID}: {car.trainset.cars.Count} cars in trainset: {string.Join(",",car.trainset.cars.Select(car=>car.ID))}");
                     if (car.trainset.cars.Count == lastTrainsetSize)
                         break;
                     else
                         lastTrainsetSize = car.trainset.cars.Count;
                 }
+                // Main.DebugLog($"No change in trainset size. loco count={car.trainset.locoIndices.Count}");
                 if (car.trainset.locoIndices.Count == 0)
-                    car.brakeSystem.independentBrakePosition = controller.targetIndependentBrake = 1f;
+                {
+                    car.GetComponent<CabooseController>().SetIndependentBrake(1f);
+                }
             }
 
+        }
+
+        [HarmonyPatch(typeof(CabooseController), "Start")]
+        public static class CabooseControllerStartPatch
+        {
             public static void Postfix(CabooseController __instance)
             {
                 if (!CarTypes.IsCaboose(__instance.car.carType))
                     __instance.GetComponent<CarDamageModel>().IgnoreDamage(false);
-                if (UnityModManager.FindMod("AirBrake") != null)
-                    __instance.StartCoroutine(DelayedSetIndependent(__instance));
             }
         }
 
