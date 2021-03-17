@@ -1,5 +1,6 @@
 using HarmonyLib;
 using System.Collections;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityModManagerNet;
@@ -10,12 +11,42 @@ namespace DvMod.HandBrake
     public static class Main
     {
         public static UnityModManager.ModEntry? mod;
+        public static Settings settings = new Settings();
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             mod = modEntry;
+            try
+            {
+                var loaded = Settings.Load<Settings>(modEntry);
+                if (loaded.version == modEntry.Info.Version)
+                {
+                    settings = loaded;
+                }
+                else
+                {
+                    settings = new Settings() { version = mod.Info.Version };
+                }
+            }
+            catch
+            {
+                settings = new Settings();
+            }
+
+            modEntry.OnGUI = OnGui;
+            modEntry.OnSaveGUI = OnSaveGui;
             modEntry.OnToggle = OnToggle;
             return true;
+        }
+
+        static private void OnGui(UnityModManager.ModEntry modEntry)
+        {
+            settings.Draw(modEntry);
+        }
+
+        static private void OnSaveGui(UnityModManager.ModEntry modEntry)
+        {
+            settings.Save(modEntry);
         }
 
         private static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
@@ -28,9 +59,10 @@ namespace DvMod.HandBrake
             return true;
         }
 
-        public static void DebugLog(string message)
+        public static void DebugLog(Func<string> message)
         {
-            mod?.Logger.Log(message);
+            if (settings.enableLogging)
+                mod?.Logger.Log(message());
         }
     }
 

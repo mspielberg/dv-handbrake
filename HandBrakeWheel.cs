@@ -121,7 +121,8 @@ namespace DvMod.HandBrake
         {
             public static void Postfix(TrainCar __instance)
             {
-                AddWheelToCar(__instance);
+                if (Main.settings.addWheels)
+                    AddWheelToCar(__instance);
             }
         }
 
