@@ -3,6 +3,7 @@ using DV.CabControls.Spec;
 using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityModManagerNet;
 
 namespace DvMod.HandBrake
 {
@@ -28,10 +29,14 @@ namespace DvMod.HandBrake
             new WheelPosition(new Vector3(0.25f, 3.42f, 6.58f), Vector3.back, 1.15f);
         private static readonly WheelPosition flatbedPosition =
             new WheelPosition(new Vector3(-1.37f, 0.8f, 1f), Vector3.right, 0.8f);
-        private static readonly WheelPosition hopperPosition =
-            new WheelPosition(new Vector3(-0.495f, 1.86f, -8.56f), Vector3.forward, 0.97f);
         private static readonly WheelPosition gondolaPosition =
             new WheelPosition(new Vector3(-0.9f, 2.4f, -6.1f), Vector3.forward, 1.0f);
+        private static readonly WheelPosition hopperPosition =
+            new WheelPosition(new Vector3(-0.495f, 1.86f, -8.56f), Vector3.forward, 0.97f);
+        private static readonly WheelPosition passengerPosition =
+            new WheelPosition(new Vector3(0.8f, 2f, -12.12f), Vector3.forward, 1.0f);
+        private static readonly WheelPosition slicedPassengerPosition =
+            new WheelPosition(new Vector3(0.8f, 2f, -10.12f), Vector3.forward, 1.0f);
         private static readonly WheelPosition tankPosition =
             new WheelPosition(new Vector3(-0.715f, 1.78f, -6.39f), Vector3.forward, 1.02f);
 
@@ -64,6 +69,14 @@ namespace DvMod.HandBrake
             [TrainCarType.GondolaGray] = gondolaPosition,
             [TrainCarType.NuclearFlask] = flatbedPosition,
         };
+
+        static HandBrakeWheel()
+        {
+            var position = (UnityModManager.FindMod("SlicedPassengerCars")?.Enabled ?? false) ? slicedPassengerPosition : passengerPosition;
+            wheelPositions[TrainCarType.PassengerRed] = position;
+            wheelPositions[TrainCarType.PassengerGreen] = position;
+            wheelPositions[TrainCarType.PassengerBlue] = position;
+        }
 
         private static GameObject? _wheelControl;
         private static GameObject WheelControl

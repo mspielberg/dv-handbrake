@@ -36,6 +36,7 @@ namespace DvMod.HandBrake
             modEntry.OnGUI = OnGui;
             modEntry.OnSaveGUI = OnSaveGui;
             modEntry.OnToggle = OnToggle;
+
             return true;
         }
 
