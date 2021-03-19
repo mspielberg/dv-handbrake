@@ -1,3 +1,4 @@
+using DV.Logic.Job;
 using HarmonyLib;
 using System.Collections;
 using System;
@@ -140,6 +141,29 @@ namespace DvMod.HandBrake
                         SetAllIndependentBrakes(1f);
                     else if (KeyBindings.decreaseIndependentBrakeKeys.IsPressed())
                         SetAllIndependentBrakes(0f);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(TransportTask), nameof(TransportTask.UpdateTaskState))]
+        public static class UpdateTaskStatePatch
+        {
+            public static void Postfix(TransportTask __instance, ref TaskState __result)
+            {
+                if (!Main.settings.requireHandbrakeForTasks)
+                    return;
+                if (__instance.state == TaskState.Done)
+                {
+                    foreach (Car car in __instance.cars)
+                    {
+                        var trainCar = SingletonBehaviour<IdGenerator>.Instance.logicCarToTrainCar[car];
+                        if (trainCar.brakeSystem.independentBrakePosition < 0.5f)
+                        {
+                            __instance.SetState(TaskState.InProgress);
+                            __result = __instance.state;
+                            return;
+                        }
+                    }
                 }
             }
         }
