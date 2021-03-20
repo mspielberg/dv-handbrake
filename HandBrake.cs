@@ -1,6 +1,7 @@
 using DV.Logic.Job;
 using HarmonyLib;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -148,11 +149,25 @@ namespace DvMod.HandBrake
         [HarmonyPatch(typeof(TransportTask), nameof(TransportTask.UpdateTaskState))]
         public static class UpdateTaskStatePatch
         {
+            public static bool IsFinalTask(TransportTask transportTask)
+            {
+                var job = transportTask.Job;
+                IEnumerable<Task> tasks = job.tasks;
+                while (true)
+                {
+                    var task = tasks.Last();
+                    if (task is ParallelTasks parallel)
+                        tasks = parallel.tasks;
+                    else if (task is SequentialTasks sequential)
+                        tasks = sequential.tasks;
+                    else
+                        return task == transportTask;
+                }
+            }
+
             public static void Postfix(TransportTask __instance, ref TaskState __result)
             {
-                if (!Main.settings.requireHandbrakeForTasks)
-                    return;
-                if (__instance.state == TaskState.Done)
+                if (__instance.state == TaskState.Done && Main.settings.requireHandbrakeForTasks && IsFinalTask(__instance))
                 {
                     foreach (Car car in __instance.cars)
                     {
