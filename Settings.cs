@@ -8,8 +8,8 @@ namespace DvMod.HandBrake
 
         [Draw("Add physical handbrake wheels")]
         public bool addWheels = true;
-        [Draw("Require handbrake set for job completion")]
-        public bool requireHandbrakeForTasks = true;
+        [Draw("% of cars requiring handbrake set for job completion", Min = 0, Max = 100)]
+        public int handbrakeRatioRequired = 10;
         [Draw("Enable logging")]
         public bool enableLogging = false;
 

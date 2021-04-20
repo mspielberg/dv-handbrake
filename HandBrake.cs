@@ -107,7 +107,6 @@ namespace DvMod.HandBrake
                     car.GetComponent<CabooseController>().SetIndependentBrake(1f);
                 }
             }
-
         }
 
         [HarmonyPatch(typeof(CabooseController), "Start")]
@@ -156,19 +155,24 @@ namespace DvMod.HandBrake
                 return lastTask == transportTask || (lastTask is ParallelTasks parallel && parallel.tasks.Contains(transportTask));
             }
 
+            private static bool IsHandbrakeSet(Car car)
+            {
+                var trainCar = SingletonBehaviour<IdGenerator>.Instance.logicCarToTrainCar[car];
+                return trainCar.brakeSystem.independentBrakePosition >= 0.5f;
+            }
+
             public static void Postfix(TransportTask __instance, ref TaskState __result)
             {
-                if (__instance.state == TaskState.Done && Main.settings.requireHandbrakeForTasks && IsFinalTask(__instance))
+                if (__instance.state == TaskState.Done && IsFinalTask(__instance))
                 {
-                    foreach (Car car in __instance.cars)
+                    var cars = __instance.cars;
+                    var numRequired = Mathf.CeilToInt(cars.Count * Main.settings.handbrakeRatioRequired / 100f);
+                    var withBrakeSet = cars.Where(IsHandbrakeSet);
+                    if (withBrakeSet.Count() < numRequired)
                     {
-                        var trainCar = SingletonBehaviour<IdGenerator>.Instance.logicCarToTrainCar[car];
-                        if (trainCar.brakeSystem.independentBrakePosition < 0.5f)
-                        {
-                            __instance.SetState(TaskState.InProgress);
-                            __result = __instance.state;
-                            return;
-                        }
+                        __instance.SetState(TaskState.InProgress);
+                        __result = __instance.state;
+                        return;
                     }
                 }
             }
