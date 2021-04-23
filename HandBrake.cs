@@ -135,6 +135,8 @@ namespace DvMod.HandBrake
             {
                 if (!PlayerManager.Car)
                     return;
+                if (Mathf.Abs(PlayerManager.Car.GetForwardSpeed()) > 3.6f)
+                    return;
                 if (KeyCode.LeftShift.IsPressed() || KeyCode.RightShift.IsPressed())
                 {
                     if (KeyBindings.increaseIndependentBrakeKeys.IsPressed())
