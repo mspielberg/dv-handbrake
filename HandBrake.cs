@@ -152,9 +152,16 @@ namespace DvMod.HandBrake
         {
             public static bool IsFinalTask(TransportTask transportTask)
             {
-                var job = transportTask.Job;
-                var lastTask = job.tasks.Last();
-                return lastTask == transportTask || (lastTask is ParallelTasks parallel && parallel.tasks.Contains(transportTask));
+                static bool IsFinalInList(TransportTask transportTask, IEnumerable<Task> tasks)
+                {
+                    return tasks.LastOrDefault() switch
+                    {
+                        SequentialTasks sequential => IsFinalInList(transportTask, sequential.tasks),
+                        ParallelTasks parallel => parallel.tasks.Contains(transportTask),
+                        Task task => task == transportTask,
+                    };
+                }
+                return IsFinalInList(transportTask, transportTask.Job.tasks);
             }
 
             private static bool IsHandbrakeSet(Car car)
@@ -165,18 +172,32 @@ namespace DvMod.HandBrake
 
             public static void Postfix(TransportTask __instance, ref TaskState __result)
             {
-                if (__instance.state == TaskState.Done && IsFinalTask(__instance))
+                if (__instance.state != TaskState.Done)
+                    return;
+                if (!IsFinalTask(__instance))
+                    return;
+                var cars = __instance.cars;
+                var numRequired = Mathf.CeilToInt(cars.Count * Main.settings.handbrakeRatioRequired / 100f);
+                var withBrakeSet = cars.Count(IsHandbrakeSet);
+                Main.DebugLog(() => $"{__instance.Job.ID}: numCars={cars.Count},numRequired={numRequired},withBrakeSet={withBrakeSet}");
+                if (withBrakeSet < numRequired)
                 {
-                    var cars = __instance.cars;
-                    var numRequired = Mathf.CeilToInt(cars.Count * Main.settings.handbrakeRatioRequired / 100f);
-                    var withBrakeSet = cars.Where(IsHandbrakeSet);
-                    if (withBrakeSet.Count() < numRequired)
-                    {
-                        __instance.SetState(TaskState.InProgress);
-                        __result = __instance.state;
-                        return;
-                    }
+                    __instance.SetState(TaskState.InProgress);
+                    __result = __instance.state;
                 }
+            }
+
+            private static void DumpJob(Job job)
+            {
+                static void DumpTask(Task task, int indent = 0)
+                {
+                    var data = task.GetTaskData();
+                    Main.DebugLog(() => $"{string.Concat(Enumerable.Repeat(" ", indent))}{data.type},{data.warehouseTaskType},{data.state},{data.destinationTrack},{string.Join(",", (data.cars ?? new List<Car>()).Select(c=>c.ID))}");
+                    foreach (var subtask in data.nestedTasks ?? new List<Task>())
+                        DumpTask(subtask, indent + 1);
+                }
+                foreach (var task in job.tasks)
+                    DumpTask(task);
             }
         }
     }
