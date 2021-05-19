@@ -2,7 +2,7 @@
   "Id": "HandBrake",
   "DisplayName": "Hand Brake",
   "Author": "Zeibach",
-  "Version": "0.3.3",
+  "Version": "0.3.4",
   "AssemblyName": "HandBrake.dll",
   "EntryMethod": "DvMod.HandBrake.Main.Load",
   "HomePage": "https://www.nexusmods.com/derailvalley/mods/212",

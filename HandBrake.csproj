@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <RootNamespace>DvMod.HandBrake</RootNamespace>
-    <InformationalVersion>0.3.3</InformationalVersion>
+    <InformationalVersion>0.3.4</InformationalVersion>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
