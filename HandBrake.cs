@@ -90,22 +90,33 @@ namespace DvMod.HandBrake
             private static IEnumerator DelayedSetIndependent(TrainCar car)
             {
                 yield return null;
-                int lastTrainsetSize = car.trainset.cars.Count;
                 // Wait for auto coupling to finish
-                while (true)
+                int lastTrainsetSize;
+                do
                 {
+                    lastTrainsetSize = car.trainset.cars.Count;
                     yield return WaitFor.SecondsRealtime(1.0f);
-                    // Main.DebugLog($"{Time.time} Checking {car.ID}: {car.trainset.cars.Count} cars in trainset: {string.Join(",",car.trainset.cars.Select(car=>car.ID))}");
-                    if (car.trainset.cars.Count == lastTrainsetSize)
-                        break;
-                    else
-                        lastTrainsetSize = car.trainset.cars.Count;
+                    if (car.indexInTrainset > 0)
+                    {
+                        Main.DebugLog(() => $"{car.ID} no longer front of trainset");
+                        yield break;
+                    }
                 }
-                // Main.DebugLog($"No change in trainset size. loco count={car.trainset.locoIndices.Count}");
-                if (car.trainset.locoIndices.Count == 0)
+                while (car.trainset.cars.Count != lastTrainsetSize);
+
+                if (car.trainset.locoIndices.Count > 0)
                 {
-                    car.GetComponent<CabooseController>().SetIndependentBrake(1f);
+                    Main.DebugLog(() => $"{car.ID} has loco in trainset");
+                    yield break;
                 }
+
+                var numCars = car.trainset.cars.Count;
+                var handBrakesRequired = Mathf.CeilToInt(numCars * Main.settings.handbrakeSpawnPercent / 100f);
+                Main.DebugLog(() => $"{car.ID} setting {handBrakesRequired} handbrakes in trainset");
+                foreach (var carToSet in car.trainset.cars.Take(handBrakesRequired))
+                    carToSet.GetComponent<CabooseController>().SetIndependentBrake(1f);
+                foreach (var carToRelease in car.trainset.cars.Skip(handBrakesRequired))
+                    carToRelease.GetComponent<CabooseController>().SetIndependentBrake(0f);
             }
         }
 
