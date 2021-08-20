@@ -56,9 +56,15 @@ namespace DvMod.HandBrake
         {
             var harmony = new Harmony(modEntry.Info.Id);
             if (value)
+            {
                 harmony.PatchAll();
+                CarSpawner.CarSpawned += HandBrake.OnCarSpawned;
+            }
             else
+            {
+                CarSpawner.CarSpawned -= HandBrake.OnCarSpawned;
                 harmony.UnpatchAll(modEntry.Info.Id);
+            }
             return true;
         }
 
@@ -71,53 +77,49 @@ namespace DvMod.HandBrake
 
     public static class HandBrake
     {
-        [HarmonyPatch(typeof(TrainCar), "OnEnable")]
-        public static class TrainCarOnEnablePatch
+        public static void OnCarSpawned(TrainCar car)
         {
-            public static void Postfix(TrainCar __instance)
+            if (CarTypes.IsAnyLocomotiveOrTender(car.carType))
+                return;
+            if (car.GetComponent<CabooseController>() == null)
             {
-                if (CarTypes.IsAnyLocomotiveOrTender(__instance.carType))
-                    return;
-                if (__instance.GetComponent<CabooseController>() == null)
-                {
-                    var cabooseController = __instance.gameObject.AddComponent<CabooseController>();
-                    cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
-                }
-                if (UnityModManager.FindMod("AirBrake")?.Enabled ?? false)
-                    __instance.StartCoroutine(DelayedSetIndependent(__instance));
+                var cabooseController = car.gameObject.AddComponent<CabooseController>();
+                cabooseController.cabTeleportDestinationCollidersGO = new GameObject();
             }
+            if (UnityModManager.FindMod("AirBrake")?.Enabled ?? false)
+                car.StartCoroutine(DelayedSetIndependent(car));
+        }
 
-            private static IEnumerator DelayedSetIndependent(TrainCar car)
+        private static IEnumerator DelayedSetIndependent(TrainCar car)
+        {
+            yield return null;
+            // Wait for auto coupling to finish
+            int lastTrainsetSize;
+            do
             {
-                yield return null;
-                // Wait for auto coupling to finish
-                int lastTrainsetSize;
-                do
+                lastTrainsetSize = car.trainset.cars.Count;
+                yield return WaitFor.SecondsRealtime(1.0f);
+                if (car.indexInTrainset > 0)
                 {
-                    lastTrainsetSize = car.trainset.cars.Count;
-                    yield return WaitFor.SecondsRealtime(1.0f);
-                    if (car.indexInTrainset > 0)
-                    {
-                        Main.DebugLog(() => $"{car.ID} no longer front of trainset");
-                        yield break;
-                    }
-                }
-                while (car.trainset.cars.Count != lastTrainsetSize);
-
-                if (car.trainset.locoIndices.Count > 0)
-                {
-                    Main.DebugLog(() => $"{car.ID} has loco in trainset");
+                    Main.DebugLog(() => $"{car.ID} no longer front of trainset");
                     yield break;
                 }
-
-                var numCars = car.trainset.cars.Count;
-                var handBrakesRequired = Mathf.CeilToInt(numCars * Main.settings.handbrakeSpawnPercent / 100f);
-                Main.DebugLog(() => $"{car.ID} setting {handBrakesRequired} handbrakes in trainset");
-                foreach (var carToSet in car.trainset.cars.Take(handBrakesRequired))
-                    carToSet.GetComponent<CabooseController>().SetIndependentBrake(1f);
-                foreach (var carToRelease in car.trainset.cars.Skip(handBrakesRequired))
-                    carToRelease.GetComponent<CabooseController>().SetIndependentBrake(0f);
             }
+            while (car.trainset.cars.Count != lastTrainsetSize);
+
+            if (car.trainset.locoIndices.Count > 0)
+            {
+                Main.DebugLog(() => $"{car.ID} has loco in trainset");
+                yield break;
+            }
+
+            var numCars = car.trainset.cars.Count;
+            var handBrakesRequired = Mathf.CeilToInt(numCars * Main.settings.handbrakeSpawnPercent / 100f);
+            Main.DebugLog(() => $"{car.ID} setting {handBrakesRequired} handbrakes in trainset");
+            foreach (var carToSet in car.trainset.cars.Take(handBrakesRequired))
+                carToSet.GetComponent<CabooseController>().SetIndependentBrake(1f);
+            foreach (var carToRelease in car.trainset.cars.Skip(handBrakesRequired))
+                carToRelease.GetComponent<CabooseController>().SetIndependentBrake(0f);
         }
 
         [HarmonyPatch(typeof(CabooseController), "Start")]
