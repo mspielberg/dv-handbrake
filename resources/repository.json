@@ -1,6 +1,7 @@
 {
   "Releases":
   [
+      {"Id": "HandBrake", "Version": "0.3.5", "DownloadUrl": "https://github.com/mspielberg/dv-handbrake/releases/download/v0.3.5/HandBrake_0.3.5.zip"},
       {"Id": "HandBrake", "Version": "0.3.4", "DownloadUrl": "https://github.com/mspielberg/dv-handbrake/releases/download/v0.3.4/HandBrake_0.3.4.zip"},
       {"Id": "HandBrake", "Version": "0.3.3", "DownloadUrl": "https://github.com/mspielberg/dv-handbrake/releases/download/v0.3.3/HandBrake_0.3.3.zip"},
       {"Id": "HandBrake", "Version": "0.3.2", "DownloadUrl": "https://github.com/mspielberg/dv-handbrake/releases/download/v0.3.2/HandBrake_0.3.2.zip"},
