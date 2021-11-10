@@ -118,7 +118,7 @@ namespace DvMod.HandBrake
                 WheelControl,
                 car.transform.TransformPoint(wheelPosition.position),
                 car.transform.rotation * Quaternion.LookRotation(Vector3.up, wheelPosition.back),
-                car.transform.GetComponentInChildren<LODGroup>().transform)!;
+                car.interior)!;
 
             ReplaceCollider(control);
 
