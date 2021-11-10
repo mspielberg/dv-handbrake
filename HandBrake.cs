@@ -28,6 +28,7 @@ namespace DvMod.HandBrake
                 else
                 {
                     settings = new Settings() { version = mod.Info.Version };
+                    MessageBox.ShowStartupMessage("Welcome to the Hand Brake mod.\nSpawned cars come with some brakes set and you must set them to turn in jobs. You can change how many are required in the Control-F10 menu.");
                 }
             }
             catch
@@ -72,6 +73,44 @@ namespace DvMod.HandBrake
         {
             if (settings.enableLogging)
                 mod?.Logger.Log(message());
+        }
+    }
+
+    public static class MessageBox
+    {
+        public static void ShowStartupMessage(string message)
+        {
+            if (WorldStreamingInit.isLoaded)
+            {
+                StartCoro(message);
+            }
+            else
+            {
+                WorldStreamingInit.LoadingFinished += () => StartCoro(message);
+            }
+        }
+
+        private static void StartCoro(string message)
+        {
+            SingletonBehaviour<CanvasSpawner>.Instance.StartCoroutine(Coro(message));
+        }
+
+        private static IEnumerator Coro(string message)
+        {
+            while (!SingletonBehaviour<CanvasSpawner>.Instance.MenuLoaded)
+                yield return null;
+            while (DV.AppUtil.IsPaused)
+                yield return null;
+            while (SingletonBehaviour<CanvasSpawner>.Instance.IsOpen)
+                yield return null;
+            yield return WaitFor.Seconds(1f);
+            MenuScreen? menuScreen = SingletonBehaviour<CanvasSpawner>.Instance.CanvasGO.transform.Find("TutorialPrompt")?.GetComponent<MenuScreen>();
+            TutorialPrompt? tutorialPrompt = menuScreen?.GetComponentInChildren<TutorialPrompt>(includeInactive: true);
+            if (menuScreen != null && tutorialPrompt != null)
+            {
+                tutorialPrompt.SetText(message);
+                SingletonBehaviour<CanvasSpawner>.Instance.Open(menuScreen, pauseGame: false);
+            }
         }
     }
 
