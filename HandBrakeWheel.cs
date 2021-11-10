@@ -127,6 +127,18 @@ namespace DvMod.HandBrake
             foreach (var collider in control.transform.GetComponentsInChildren<Collider>())
                 collider.isTrigger = true;
             cabInput.independentBrake = control;
+
+            var lodController = car.GetComponent<TrainPhysicsLod>();
+            if (lodController != null)
+            {
+                lodController.TrainPhysicsLodChanged += (currentLod) =>
+                {
+                    if (currentLod <= 1)
+                        control.SetActive(true);
+                    else
+                        control.SetActive(false);
+                };
+            }
         }
 
         [HarmonyPatch(typeof(TrainCar), nameof(TrainCar.Awake))]
