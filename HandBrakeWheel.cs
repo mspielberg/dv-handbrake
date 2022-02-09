@@ -30,7 +30,7 @@ namespace DvMod.HandBrake
         private static readonly WheelPosition flatbedPosition =
             new WheelPosition(new Vector3(-1.37f, 0.8f, 1f), Vector3.right, 0.8f);
         private static readonly WheelPosition gondolaPosition =
-            new WheelPosition(new Vector3(-0.9f, 2.4f, -6.1f), Vector3.forward, 1.0f);
+            new WheelPosition(new Vector3(-1.41f, 1.3f, 5.7f), Vector3.right, 1.0f);
         private static readonly WheelPosition hopperPosition =
             new WheelPosition(new Vector3(-0.495f, 1.86f, -8.56f), Vector3.forward, 0.97f);
         private static readonly WheelPosition passengerPosition =
