@@ -2,6 +2,7 @@ using DV.CabControls;
 using DV.CabControls.Spec;
 using HarmonyLib;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -9,73 +10,51 @@ namespace DvMod.HandBrake
 {
     public static class HandBrakeWheel
     {
-        private readonly struct WheelPosition
+        private class WheelPosition
         {
             public readonly Vector3 position;
             public readonly Vector3 back;
             public readonly float size;
+            public readonly string[] patterns;
 
-            public WheelPosition(Vector3 position, Vector3 back, float size)
+            public WheelPosition(Vector3 position, Vector3 back, float size, params string[] patterns)
             {
                 this.position = position;
                 this.back = back;
                 this.size = size;
+                this.patterns = patterns;
             }
         }
 
-        private static readonly WheelPosition autorackPosition =
-            new WheelPosition(new Vector3(-1.4f, 0.8f, 1f), Vector3.right, 1.0f);
-        private static readonly WheelPosition boxcarPosition =
-            new WheelPosition(new Vector3(0.25f, 3.42f, 6.58f), Vector3.back, 1.15f);
-        private static readonly WheelPosition flatbedPosition =
-            new WheelPosition(new Vector3(-1.37f, 0.8f, 1f), Vector3.right, 0.8f);
-        private static readonly WheelPosition gondolaPosition =
-            new WheelPosition(new Vector3(-1.41f, 1.3f, 5.7f), Vector3.right, 1.0f);
-        private static readonly WheelPosition hopperPosition =
-            new WheelPosition(new Vector3(-0.495f, 1.86f, -8.56f), Vector3.forward, 0.97f);
-        private static readonly WheelPosition passengerPosition =
-            new WheelPosition(new Vector3(0.8f, 2f, -10.12f), Vector3.forward, 1.0f);
-        private static readonly WheelPosition slicedPassengerPosition =
-            new WheelPosition(new Vector3(0.8f, 2f, -7.13f), Vector3.forward, 1.0f);
-        private static readonly WheelPosition tankPosition =
-            new WheelPosition(new Vector3(-0.715f, 1.78f, -6.39f), Vector3.forward, 1.02f);
-
-        private static readonly Dictionary<TrainCarType, WheelPosition> wheelPositions = new Dictionary<TrainCarType, WheelPosition>()
+        private static readonly List<WheelPosition> wheelPositions = new List<WheelPosition>()
         {
-            [TrainCarType.FlatbedEmpty] = flatbedPosition,
-            [TrainCarType.FlatbedStakes] = flatbedPosition,
-            [TrainCarType.FlatbedMilitary] = flatbedPosition,
-            [TrainCarType.AutorackRed] = autorackPosition,
-            [TrainCarType.AutorackBlue] = autorackPosition,
-            [TrainCarType.AutorackGreen] = autorackPosition,
-            [TrainCarType.AutorackYellow] = autorackPosition,
-            [TrainCarType.TankOrange] = tankPosition,
-            [TrainCarType.TankWhite] = tankPosition,
-            [TrainCarType.TankYellow] = tankPosition,
-            [TrainCarType.TankBlue] = tankPosition,
-            [TrainCarType.TankChrome] = tankPosition,
-            [TrainCarType.TankBlack] = tankPosition,
-            [TrainCarType.BoxcarBrown] = boxcarPosition,
-            [TrainCarType.BoxcarGreen] = boxcarPosition,
-            [TrainCarType.BoxcarPink] = boxcarPosition,
-            [TrainCarType.BoxcarRed] = boxcarPosition,
-            [TrainCarType.BoxcarMilitary] = boxcarPosition,
-            [TrainCarType.RefrigeratorWhite] = boxcarPosition,
-            [TrainCarType.HopperBrown] = hopperPosition,
-            [TrainCarType.HopperTeal] = hopperPosition,
-            [TrainCarType.HopperYellow] = hopperPosition,
-            [TrainCarType.GondolaRed] = gondolaPosition,
-            [TrainCarType.GondolaGreen] = gondolaPosition,
-            [TrainCarType.GondolaGray] = gondolaPosition,
-            [TrainCarType.NuclearFlask] = flatbedPosition,
+            new WheelPosition(new Vector3(-1.4f, 0.8f, 1f), Vector3.right, 1.0f, "Autorack"),
+            new WheelPosition(new Vector3(0.25f, 3.42f, 6.58f), Vector3.back, 1.15f, "Boxcar", "Refrigerator"),
+            new WheelPosition(new Vector3(-1.37f, 0.8f, 1f), Vector3.right, 0.8f, "Flatbed", "NuclearFlask"),
+            new WheelPosition(new Vector3(-1.41f, 1.3f, 5.7f), Vector3.right, 1.0f, "Gondola"),
+            new WheelPosition(new Vector3(-0.495f, 1.86f, -8.56f), Vector3.forward, 0.97f, "Hopper"),
+            new WheelPosition(new Vector3(-0.715f, 1.78f, -6.39f), Vector3.forward, 1.02f, "Tank"),
         };
+
+        private static readonly WheelPosition passengerPosition =
+            new WheelPosition(new Vector3(0.8f, 2f, -10.12f), Vector3.forward, 1.0f, "Passenger");
+        private static readonly WheelPosition slicedPassengerPosition =
+            new WheelPosition(new Vector3(0.8f, 2f, -7.13f), Vector3.forward, 1.0f, "Passenger");
+
+        private static readonly Dictionary<TrainCarType, WheelPosition> wheelPositionMap = new Dictionary<TrainCarType, WheelPosition>();
 
         static HandBrakeWheel()
         {
-            var position = (UnityModManager.FindMod("SlicedPassengerCars")?.Enabled ?? false) ? slicedPassengerPosition : passengerPosition;
-            wheelPositions[TrainCarType.PassengerRed] = position;
-            wheelPositions[TrainCarType.PassengerGreen] = position;
-            wheelPositions[TrainCarType.PassengerBlue] = position;
+            foreach (TrainCarType carType in System.Enum.GetValues(typeof(TrainCarType)))
+            {
+                var name = System.Enum.GetName(typeof(TrainCarType), carType);
+                var wheelPosition = wheelPositions.FirstOrDefault(wp => wp.patterns.Any(name.StartsWith));
+                if (wheelPosition != default)
+                    wheelPositionMap.Add(carType, wheelPosition);
+            }
+
+            var passengerCarPosition = (UnityModManager.FindMod("SlicedPassengerCars")?.Enabled ?? false) ? slicedPassengerPosition : passengerPosition;
+            wheelPositions.Add(passengerCarPosition);
         }
 
         private static GameObject? _wheelControl;
@@ -111,7 +90,7 @@ namespace DvMod.HandBrake
         {
             if (car.GetComponent<CabInputCaboose>() != null)
                 return;
-            if (!wheelPositions.TryGetValue(car.carType, out var wheelPosition))
+            if (!wheelPositionMap.TryGetValue(car.carType, out var wheelPosition))
                 return;
             var cabInput = car.gameObject.AddComponent<CabInputCaboose>();
             var control = Object.Instantiate(
