@@ -101,8 +101,6 @@ namespace DvMod.HandBrake
             colliderGO.transform.localPosition = Vector3.zero;
             colliderGO.transform.localRotation = Quaternion.identity;
             colliderGO.transform.localScale = new Vector3(0.35f, 0.01f, 0.35f);
-            foreach (var other in wheel.GetComponentsInParent<Collider>())
-                Physics.IgnoreCollision(collider, other);
         }
 
         public static void AddWheelToCar(TrainCar car)
@@ -122,8 +120,6 @@ namespace DvMod.HandBrake
 
             control.transform.localScale = new Vector3(wheelPosition.size, 1.0f, wheelPosition.size);
             control.SetLayersRecursive("Interactable");
-            foreach (var collider in control.transform.GetComponentsInChildren<Collider>())
-                collider.isTrigger = true;
             cabInput.independentBrake = control;
 
             if (car.GetComponent<TrainPhysicsLod>() is var lodController && lodController != null)
