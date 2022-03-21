@@ -45,6 +45,8 @@ namespace DvMod.HandBrake
 
         static HandBrakeWheel()
         {
+            var passengerCarPosition = (UnityModManager.FindMod("SlicedPassengerCars")?.Enabled ?? false) ? slicedPassengerPosition : passengerPosition;
+            wheelPositions.Add(passengerCarPosition);
             foreach (TrainCarType carType in System.Enum.GetValues(typeof(TrainCarType)))
             {
                 var name = System.Enum.GetName(typeof(TrainCarType), carType);
@@ -52,9 +54,6 @@ namespace DvMod.HandBrake
                 if (wheelPosition != default)
                     wheelPositionMap.Add(carType, wheelPosition);
             }
-
-            var passengerCarPosition = (UnityModManager.FindMod("SlicedPassengerCars")?.Enabled ?? false) ? slicedPassengerPosition : passengerPosition;
-            wheelPositions.Add(passengerCarPosition);
         }
 
         private static GameObject? _wheelControl;
