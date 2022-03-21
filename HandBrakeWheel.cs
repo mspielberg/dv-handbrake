@@ -71,6 +71,26 @@ namespace DvMod.HandBrake
             }
         }
 
+        private static bool ShouldReceiveWheel(TrainCar car)
+        {
+            if (car.GetComponent<CabInputCaboose>() != null)
+            {
+                Main.DebugLog(() => $"{car.ID} already has a CabInputCaboose component");
+                return false;
+            }
+            if (car.transform.Find("[DvMod.HandBrake]") != null)
+            {
+                Main.DebugLog(() => $"Found [DvMod.HandBrake] transform for {car.carType}");
+                return true;
+            }
+            if (wheelPositionMap.ContainsKey(car.carType))
+            {
+                Main.DebugLog(() => $"Found defined WheelPosition for {car.carType}");
+                return true;
+            }
+            return false;
+        }
+
         private static void ReplaceCollider(GameObject wheel)
         {
             GameObject.Destroy(wheel.transform.Find("colliders").gameObject);
@@ -87,10 +107,10 @@ namespace DvMod.HandBrake
 
         public static void AddWheelToCar(TrainCar car)
         {
-            if (car.GetComponent<CabInputCaboose>() != null)
+            if (!ShouldReceiveWheel(car))
                 return;
-            if (!wheelPositionMap.TryGetValue(car.carType, out var wheelPosition))
-                return;
+            var wheelPosition = wheelPositionMap[car.carType];
+
             var cabInput = car.gameObject.AddComponent<CabInputCaboose>();
             var control = Object.Instantiate(
                 WheelControl,
