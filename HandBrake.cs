@@ -244,7 +244,7 @@ namespace DvMod.HandBrake
                 static void DumpTask(Task task, int indent = 0)
                 {
                     var data = task.GetTaskData();
-                    Main.DebugLog(() => $"{string.Concat(Enumerable.Repeat(" ", indent))}{data.type},{data.warehouseTaskType},{data.state},{data.destinationTrack},{string.Join(",", (data.cars ?? new List<Car>()).Select(c=>c.ID))}");
+                    Main.DebugLog(() => $"{string.Concat(Enumerable.Repeat(" ", indent))}{data.type},{data.warehouseTaskType},{data.state},{data.destinationTrack},{string.Join(",", (data.cars ?? new List<Car>()).Select(c => c.ID))}");
                     foreach (var subtask in data.nestedTasks ?? new List<Task>())
                         DumpTask(subtask, indent + 1);
                 }

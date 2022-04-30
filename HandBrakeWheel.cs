@@ -71,24 +71,30 @@ namespace DvMod.HandBrake
             }
         }
 
-        private static bool ShouldReceiveWheel(TrainCar car)
+        private static Transform? GetPivot(TrainCar car)
         {
             if (car.GetComponent<CabInputCaboose>() != null)
             {
                 Main.DebugLog(() => $"{car.ID} already has a CabInputCaboose component");
-                return false;
+                return null;
             }
-            if (car.transform.Find("[DvMod.HandBrake]") != null)
-            {
-                Main.DebugLog(() => $"Found [DvMod.HandBrake] transform for {car.carType}");
-                return true;
-            }
-            if (wheelPositionMap.ContainsKey(car.carType))
+
+            if (car.transform.Find("[DvMod.HandBrake]") is Transform transform)
+                return transform;
+
+            if (wheelPositionMap.TryGetValue(car.carType, out var wheelPosition))
             {
                 Main.DebugLog(() => $"Found defined WheelPosition for {car.carType}");
-                return true;
+                var obj = new GameObject("[DvMod.HandBrake]");
+                obj.transform.parent = car.interior;
+                obj.transform.localPosition = wheelPosition.position;
+                obj.transform.localRotation = Quaternion.LookRotation(Vector3.up, wheelPosition.back);
+                obj.transform.localScale = new Vector3(wheelPosition.size, 1.0f, wheelPosition.size);
+                return obj.transform;
             }
-            return false;
+
+            Main.DebugLog(() => $"Found no position for handbrake wheel for {car.carType}");
+            return null;
         }
 
         private static void ReplaceCollider(GameObject wheel)
@@ -105,20 +111,19 @@ namespace DvMod.HandBrake
 
         public static void AddWheelToCar(TrainCar car)
         {
-            if (!ShouldReceiveWheel(car))
+            var pivotTransform = GetPivot(car);
+            if (pivotTransform == null)
                 return;
-            var wheelPosition = wheelPositionMap[car.carType];
 
             var cabInput = car.gameObject.AddComponent<CabInputCaboose>();
             var control = Object.Instantiate(
                 WheelControl,
-                car.transform.TransformPoint(wheelPosition.position),
-                car.transform.rotation * Quaternion.LookRotation(Vector3.up, wheelPosition.back),
-                car.interior)!;
+                pivotTransform.position,
+                pivotTransform.rotation,
+                pivotTransform);
 
             ReplaceCollider(control);
 
-            control.transform.localScale = new Vector3(wheelPosition.size, 1.0f, wheelPosition.size);
             control.SetLayersRecursive("Interactable");
             cabInput.independentBrake = control;
 
