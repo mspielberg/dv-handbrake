@@ -85,6 +85,7 @@ namespace DvMod.HandBrake
                 {
                     transform.GetChild(i).gameObject.SetActive(false);
                 }
+                transform.parent = car.interior;
                 return transform;
             }
 
