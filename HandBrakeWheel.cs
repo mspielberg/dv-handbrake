@@ -91,7 +91,6 @@ namespace DvMod.HandBrake
 
             if (wheelPositionMap.TryGetValue(car.carType, out var wheelPosition))
             {
-                Main.DebugLog(() => $"Found defined WheelPosition for {car.carType}");
                 var obj = new GameObject("[DvMod.HandBrake]");
                 obj.transform.parent = car.interior;
                 obj.transform.localPosition = wheelPosition.position;
