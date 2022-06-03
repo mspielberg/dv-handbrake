@@ -130,6 +130,13 @@ namespace DvMod.HandBrake
 
             ReplaceCollider(control);
 
+            var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            marker.name = "position marker";
+            Component.DestroyImmediate(marker.GetComponent<Collider>());
+            marker.transform.SetParent(control.transform, worldPositionStays: false);
+            marker.transform.localPosition = new Vector3(0.07f, -0.005f, 0f);
+            marker.transform.localScale = new Vector3(0.1f, 0.01f, 0.02f);
+
             control.SetLayersRecursive("Interactable");
             cabInput.independentBrake = control;
 
