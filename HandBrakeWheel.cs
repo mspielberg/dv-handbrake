@@ -141,7 +141,17 @@ namespace DvMod.HandBrake
             cabInput.independentBrake = control;
 
             if (car.GetComponent<TrainPhysicsLod>() is var lodController && lodController != null)
-                lodController.TrainPhysicsLodChanged += (currentLod) => control.SetActive(currentLod <= 1);
+            {
+                lodController.TrainPhysicsLodChanged += (currentLod) =>
+                {
+                    if (cabInput.initialized)
+                    {
+                        var newActive = currentLod <= 2;
+                        Main.DebugLog(() => $"[{car.ID}] setting active={newActive}, lod={currentLod}");
+                        control.SetActive(newActive);
+                    }
+                };
+           }
         }
 
         [HarmonyPatch(typeof(TrainCar), nameof(TrainCar.Awake))]
